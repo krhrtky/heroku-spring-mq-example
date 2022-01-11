@@ -2,6 +2,8 @@ package com.example.herokuspringmqexample
 
 import org.springframework.amqp.core.AmqpAdmin
 import org.springframework.amqp.core.Queue
+import org.springframework.amqp.rabbit.annotation.EnableRabbit
+import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory
 import org.springframework.amqp.rabbit.connection.CachingConnectionFactory
 import org.springframework.amqp.rabbit.connection.ConnectionFactory
 import org.springframework.amqp.rabbit.core.RabbitAdmin
@@ -13,6 +15,7 @@ import java.net.URI
 import java.net.URISyntaxException
 
 @Configuration
+@EnableRabbit
 class RabbitMQConfig {
     private val cloudamqpUrlKey = "CLOUDAMQP_URL"
     protected val helloWorldQueueName = "hello.world.queue"
@@ -45,7 +48,7 @@ class RabbitMQConfig {
     }
 
     @Bean
-    fun rabbitTemplate(): RabbitTemplate? {
+    fun rabbitTemplate(): RabbitTemplate {
         val template = RabbitTemplate(connectionFactory())
         template.routingKey = helloWorldQueueName
         template.setDefaultReceiveQueue(helloWorldQueueName)
@@ -54,4 +57,13 @@ class RabbitMQConfig {
 
     @Bean
     fun queue(): Queue = Queue(helloWorldQueueName)
+
+    @Bean
+    fun rabbitListenerContainerFactory(): SimpleRabbitListenerContainerFactory {
+        val factory = SimpleRabbitListenerContainerFactory()
+        factory.setConnectionFactory(connectionFactory())
+        factory.setConcurrentConsumers(3)
+        factory.setMaxConcurrentConsumers(10)
+        return factory
+    }
 }
